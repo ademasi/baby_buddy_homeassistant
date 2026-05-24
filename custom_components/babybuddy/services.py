@@ -119,9 +119,17 @@ async def __setup_service_data(
 
     child_entity_id = data.get(ATTR_CHILD)
     if child_entity_id and isinstance(child_entity_id, str):
-        # Primary: read child ID from entity state attributes
+        # Primary: read child ID from entity state attributes.
+        # NOTE: only the child *sensor* exposes the child id in its `id`
+        # attribute. The timer *switch*'s `id` attribute is the running timer's
+        # id (not the child), so for switch.* entities we must fall through to
+        # the name-pattern match below to resolve the correct child id.
         state = call.hass.states.get(child_entity_id)
-        if state and state.attributes.get(ATTR_ID) is not None:
+        if (
+            state
+            and not child_entity_id.startswith("switch.")
+            and state.attributes.get(ATTR_ID) is not None
+        ):
             data[ATTR_CHILD] = state.attributes[ATTR_ID]
         else:
             # Fallback: match against known entity_id patterns
