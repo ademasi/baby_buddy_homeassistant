@@ -11,7 +11,12 @@ from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.const import ATTR_TIME, UnitOfTime
+from homeassistant.const import (
+    ATTR_TIME,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.util import dt as dt_util
 
 LOGGER = logging.getLogger(__package__)
@@ -121,6 +126,12 @@ class BabyBuddyEntityDescription(SensorEntityDescription, SwitchEntityDescriptio
     """Describe Baby Buddy sensor entity."""
 
     state_key: Callable[[dict], int] | str = ""
+    # API data key (endpoint) this sensor reads from. Defaults to `key`; set it
+    # explicitly when several sensors derive from one endpoint (e.g. a feeding
+    # timestamp sensor and a feeding amount sensor both read `feedings`).
+    endpoint: str = ""
+    # Optional override for the "<child> last <...>" name suffix.
+    name_suffix: str | None = None
 
 
 SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
@@ -137,8 +148,21 @@ SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
         state_key=ATTR_TIME,
     ),
     BabyBuddyEntityDescription(
+        # Feeding "last" sensor is the time of the most recent feeding (its end);
+        # the amount/type/method remain available as attributes. Using the amount
+        # as state left it 'unknown' for breast feeds (issues #45, #167).
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon=ATTR_ICON_BABY_BOTTLE,
         key=ATTR_FEEDINGS,
+        state_key=ATTR_END,
+    ),
+    BabyBuddyEntityDescription(
+        # Amount of the last feeding (bottle: breast milk / formula / other), in mL.
+        endpoint=ATTR_FEEDINGS,
+        key="feeding_amount",
+        name_suffix="feeding amount",
+        icon=ATTR_ICON_BABY_BOTTLE,
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         state_class=SensorStateClass.MEASUREMENT,
         state_key=ATTR_AMOUNT,
     ),
@@ -163,6 +187,7 @@ SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
     BabyBuddyEntityDescription(
         icon=ATTR_ICON_MOTHER_NURSE,
         key=ATTR_PUMPING,
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         state_class=SensorStateClass.MEASUREMENT,
         state_key=ATTR_AMOUNT,
     ),
@@ -177,6 +202,9 @@ SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
     ),
     BabyBuddyEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
+        # Baby Buddy has no unit in its API; default to °C (HA requires a unit
+        # for the temperature device_class — issue #153).
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon=ATTR_ICON_THERMOMETER,
         key=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

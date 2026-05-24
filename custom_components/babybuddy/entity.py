@@ -49,7 +49,7 @@ class BabyBuddySensor(CoordinatorEntity, SensorEntity):
         self.child = child
         self._attr_device_info = {
             "configuration_url": f"{coordinator.entry.data[CONF_HOST]}:{coordinator.entry.data[CONF_PORT]}{coordinator.entry.data[CONF_PATH]}/children/{child[ATTR_SLUG]}/dashboard/",
-            "identifiers": {(DOMAIN, child[ATTR_ID])},
+            "identifiers": {(DOMAIN, str(child[ATTR_ID]))},
             "name": f"{child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]}",
         }
 
@@ -99,11 +99,18 @@ class BabyBuddyChildDataSensor(BabyBuddySensor):
         self._attr_unique_id = f"{self.coordinator.entry.data[CONF_API_KEY]}-{child[ATTR_ID]}-{description.key}"
 
     @property
+    def _endpoint(self) -> str:
+        """API data key this sensor reads from (defaults to the entity key)."""
+        return self.entity_description.endpoint or self.entity_description.key
+
+    @property
     def name(self) -> str:
         """Return the name of the babybuddy sensor."""
-        sensor_type = self.entity_description.key
-        if sensor_type[-1] == "s":
-            sensor_type = sensor_type[:-1]
+        sensor_type = self.entity_description.name_suffix
+        if sensor_type is None:
+            sensor_type = self.entity_description.key
+            if sensor_type[-1] == "s":
+                sensor_type = sensor_type[:-1]
         return f"{self.child[ATTR_FIRST_NAME]} {self.child[ATTR_LAST_NAME]} last {sensor_type}"
 
     @property
@@ -112,7 +119,7 @@ class BabyBuddyChildDataSensor(BabyBuddySensor):
         if self.child[ATTR_ID] not in self.coordinator.data[1]:
             return None
         data: dict[str, str] = self.coordinator.data[1][self.child[ATTR_ID]][
-            self.entity_description.key
+            self._endpoint
         ]
         if not data:
             return None
@@ -128,17 +135,11 @@ class BabyBuddyChildDataSensor(BabyBuddySensor):
         """Return entity specific state attributes."""
         attrs: dict[str, Any] = {}
         if self.child[ATTR_ID] in self.coordinator.data[1]:
-            attrs = self.coordinator.data[1][self.child[ATTR_ID]][
-                self.entity_description.key
-            ]
+            attrs = self.coordinator.data[1][self.child[ATTR_ID]][self._endpoint]
             if self.entity_description.key == ATTR_CHANGES:
                 wet_and_solid: tuple[bool, bool] = (
-                    self.coordinator.data[1][self.child[ATTR_ID]][
-                        self.entity_description.key
-                    ].get(ATTR_WET, False),
-                    self.coordinator.data[1][self.child[ATTR_ID]][
-                        self.entity_description.key
-                    ].get(ATTR_SOLID, False),
+                    attrs.get(ATTR_WET, False),
+                    attrs.get(ATTR_SOLID, False),
                 )
                 if wet_and_solid == (True, False):
                     attrs[ATTR_DESCRIPTIVE] = DIAPER_TYPES[0]
@@ -179,7 +180,7 @@ class BabyBuddyChildTimerSwitch(CoordinatorEntity, SwitchEntity):
         )
         self._attr_icon = ATTR_ICON_TIMER_SAND
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, child[ATTR_ID])},
+            "identifiers": {(DOMAIN, str(child[ATTR_ID]))},
             "name": f"{child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]}",
         }
 
