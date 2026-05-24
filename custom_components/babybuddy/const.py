@@ -11,7 +11,14 @@ from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.const import ATTR_TIME, UnitOfTemperature, UnitOfTime, UnitOfVolume
+from homeassistant.const import (
+    ATTR_TIME,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.util import dt as dt_util
 
 LOGGER = logging.getLogger(__package__)
@@ -162,12 +169,16 @@ SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
         state_key=ATTR_AMOUNT,
     ),
     BabyBuddyEntityDescription(
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         icon=ATTR_ICON_HEAD,
         key=ATTR_HEAD_CIRCUMFERENCE_DASH,
         state_class=SensorStateClass.MEASUREMENT,
         state_key=ATTR_HEAD_CIRCUMFERENCE_UNDERSCORE,
     ),
     BabyBuddyEntityDescription(
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         icon=ATTR_ICON_HEIGHT,
         key=ATTR_HEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -215,6 +226,8 @@ SENSOR_TYPES: tuple[BabyBuddyEntityDescription, ...] = (
         ),
     ),
     BabyBuddyEntityDescription(
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         icon=ATTR_ICON_SCALE,
         key=ATTR_WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
