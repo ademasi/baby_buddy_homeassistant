@@ -52,7 +52,9 @@ def update_items(
                 key = f"{child_id}_{description.key}"
                 endpoint = description.endpoint or description.key
                 if coordinator.data[1][child_id].get(endpoint) and key not in tracked:
-                    tracked[key] = BabyBuddyChildDataSensor(coordinator, child, description)
+                    tracked[key] = BabyBuddyChildDataSensor(
+                        coordinator, child, description
+                    )
                     new_entities.append(tracked[key])
             for timer in coordinator.data[1].get(child_id, {}).get(ATTR_TIMERS, []):
                 timer_id = timer[ATTR_ID]
@@ -67,7 +69,8 @@ def update_items(
 
         entity_reg = er.async_get(coordinator.hass)
         stale = [
-            k for k, v in tracked.items()
+            k
+            for k, v in tracked.items()
             if isinstance(v, BabyBuddyTimerSensor) and k not in active_timer_keys
         ]
         for k in stale:

@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util, slugify
 
 from .client import get_datetime_from_time
@@ -74,7 +74,7 @@ from .const import (
     FEEDING_TYPES,
     LOGGER,
 )
-from .coordinator import BabyBuddyConfigEntry, BabyBuddyCoordinator
+from .coordinator import BabyBuddyCoordinator
 from .errors import ValidationError
 
 SERVICE_ADD_CHILD_SCHEMA: vol.Schema = vol.Schema(
@@ -136,8 +136,10 @@ async def __setup_service_data(
             matched_child_id = None
             for child in coordinator.data[0]:
                 if (
-                    f"sensor.{slugify(f'Baby {child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]}')}" == child_entity_id
-                    or f"switch.{slugify(f'{child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]} {ATTR_TIMER}')}" == child_entity_id
+                    f"sensor.{slugify(f'Baby {child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]}')}"
+                    == child_entity_id
+                    or f"switch.{slugify(f'{child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]} {ATTR_TIMER}')}"
+                    == child_entity_id
                 ):
                     matched_child_id = child[ATTR_ID]
                     break
@@ -355,7 +357,6 @@ async def async_add_weight(call: ServiceCall) -> None:
 async def async_delete_last_entry(call: ServiceCall) -> None:
     """Delete last data entry."""
     coordinator = await __async_extract_entry_coordinator(call)
-    data = await __setup_service_data(call, coordinator)
     entity = call.hass.states.get(call.data.get(ATTR_ENTITY_ID))
     key = call.data[ATTR_ENTITY_ID].split(".")[1].split("_")[3]
 

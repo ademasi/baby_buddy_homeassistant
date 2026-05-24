@@ -253,8 +253,10 @@ class BabyBuddyTimerSensor(BabyBuddySensor):
         """Return name using the timer's own name when available."""
         timer = self._get_timer()
         timer_name = timer.get("name") if timer else None
-        suffix = timer_name if timer_name else str(self._timer_id)
-        return f"{self.child[ATTR_FIRST_NAME]} {self.child[ATTR_LAST_NAME]} timer {suffix}"
+        suffix = timer_name or str(self._timer_id)
+        return (
+            f"{self.child[ATTR_FIRST_NAME]} {self.child[ATTR_LAST_NAME]} timer {suffix}"
+        )
 
     @property
     def available(self) -> bool:

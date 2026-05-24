@@ -149,13 +149,20 @@ class BabyBuddyCoordinator(DataUpdateCoordinator):
 
         for child in children_list[ATTR_RESULTS]:
             child_data.setdefault(child[ATTR_ID], {})
-            for endpoint in SENSOR_TYPES:
+            fetched: set[str] = set()
+            for description in SENSOR_TYPES:
+                # Several sensors can share one API endpoint (e.g. feeding time +
+                # feeding amount). Fetch each real endpoint only once.
+                endpoint = description.endpoint or description.key
+                if endpoint in fetched:
+                    continue
+                fetched.add(endpoint)
                 endpoint_data: dict = {}
                 query = f"?child={child[ATTR_ID]}&limit=1"
-                if endpoint.key == "timers":
+                if endpoint == "timers":
                     query = f"?child={child[ATTR_ID]}"
                 try:
-                    endpoint_data = await self.client.async_get(endpoint.key, query)
+                    endpoint_data = await self.client.async_get(endpoint, query)
                 except ClientResponseError as error:
                     LOGGER.debug(
                         f"No {endpoint} found for {child[ATTR_FIRST_NAME]} {child[ATTR_LAST_NAME]}. Skipping. error: {error}.)"
@@ -165,10 +172,10 @@ class BabyBuddyCoordinator(DataUpdateCoordinator):
                     LOGGER.error(error)
                     continue
                 data: list[dict[str, str]] = endpoint_data[ATTR_RESULTS]
-                if endpoint.key == "timers":
-                    child_data[child[ATTR_ID]][endpoint.key] = data
+                if endpoint == "timers":
+                    child_data[child[ATTR_ID]][endpoint] = data
                     continue
-                child_data[child[ATTR_ID]][endpoint.key] = data[0] if data else {}
+                child_data[child[ATTR_ID]][endpoint] = data[0] if data else {}
 
             # Fetch all active timers (no limit) so each timer gets its own sensor
             try:

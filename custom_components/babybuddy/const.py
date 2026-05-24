@@ -11,12 +11,7 @@ from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.const import (
-    ATTR_TIME,
-    UnitOfTemperature,
-    UnitOfTime,
-    UnitOfVolume,
-)
+from homeassistant.const import ATTR_TIME, UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.util import dt as dt_util
 
 LOGGER = logging.getLogger(__package__)
